@@ -3,13 +3,13 @@
 Slightly better version of the xinput implementation for unity based on the amazing work done by speps (https://github.com/speps/XInputDotNet), allows to control four gamepads with a very simple to use API and easily map computer inputs to gamepad button using a custom inspector.
 
 Simply drag the "LaunchGamePadController" script in on any object in your scene (preferably an empty). Then in your character controller script for instance, add the following :
-
+```
 GamePadController.Controller gamePad; //Declaring a variable for our gamepad
 void Start()
 {
     gamePad = GamePadController.GamePadOne; //GamePadOne for first controller GamePadTwo for the second one, and so on...
 }
-
+```
 And then to use the buttons just write :
 
 gamePad.A.Pressed (if you want to check that the button A has been pressed [one frame])
