@@ -490,7 +490,7 @@ public class GamePadController
         if (ControllerConnected[controllerId])
         {
             if (computerInput.inputSetup && gamePadVal == 0)
-                return computerInput.axisValue;
+                return computerInput.axisValue.X;
             else
                 return gamePadVal;
         }
@@ -498,7 +498,7 @@ public class GamePadController
         {
             {
                 if (computerInput.inputSetup)
-                    return computerInput.axisValue;
+                    return computerInput.axisValue.X;
                 else
                     return 0f;
             }
@@ -522,10 +522,10 @@ public class GamePadController
 
             if (curcomputerButton.inputSetup)
             {
-                curGamePadButton.Held = SetAndCheckIfUnityButtonIsSetup(controllerId, curcomputerButton, curGamePadButton.Held, curcomputerButton.Held);
-                curGamePadButton.Pressed = SetAndCheckIfUnityButtonIsSetup(controllerId, curcomputerButton, curGamePadButton.Pressed, curcomputerButton.Pressed);
-                curGamePadButton.Released = SetAndCheckIfUnityButtonIsSetup(controllerId, curcomputerButton, curGamePadButton.Released, curcomputerButton.Released);
-                curGamePadButton.Zero = SetAndCheckIfUnityButtonIsSetup(controllerId, curcomputerButton, curGamePadButton.Zero, curcomputerButton.Zero);
+                curGamePadButton.Held = SetAndCheckIfUnityButtonIsSetup(controllerId, curcomputerButton, curGamePadButton.Held, curcomputerButton.inputState.Held);
+                curGamePadButton.Pressed = SetAndCheckIfUnityButtonIsSetup(controllerId, curcomputerButton, curGamePadButton.Pressed, curcomputerButton.inputState.Pressed);
+                curGamePadButton.Released = SetAndCheckIfUnityButtonIsSetup(controllerId, curcomputerButton, curGamePadButton.Released, curcomputerButton.inputState.Released);
+                curGamePadButton.Zero = SetAndCheckIfUnityButtonIsSetup(controllerId, curcomputerButton, curGamePadButton.Zero, curcomputerButton.inputState.Zero);
 
                 GamePads[controllerId].GetType().GetField(gamePadButton).SetValue(GamePads[controllerId], curGamePadButton);
             }
@@ -884,13 +884,13 @@ public class GamePadController
                         }
                         GUILayout.EndHorizontal();
                         GUILayout.BeginVertical();
-                        newButton.axisValue = EditorGUILayout.Slider(newButton.axisValue, -1, 1);
-                        ProgressBar(Mathf.Abs(newButton.axisValue), "Axis");
+                        newButton.axisValue.X = EditorGUILayout.Slider(newButton.axisValue.X, -1, 1);
+                        ProgressBar(Mathf.Abs(newButton.axisValue.X), "Axis");
                         GUILayout.EndVertical();
                         GUILayout.BeginVertical();
                     }
                 }
-                EditorGUILayout.FloatField(newButton.axisValue);
+                EditorGUILayout.FloatField(newButton.axisValue.X);
             }
             else
             {
@@ -907,23 +907,23 @@ public class GamePadController
                 if (newButton.inputDir == LaunchGamePadControllerInspector.axisDir.plus)
                 {
                     if (axisVal >= 0)
-                        newButton.axisValue = axisVal;
+                        newButton.axisValue.X = axisVal;
                     else
-                        newButton.axisValue = 0;
+                        newButton.axisValue.X = 0;
                 }
                 else if (newButton.inputDir == LaunchGamePadControllerInspector.axisDir.minus)
                 {
                     if (axisVal <= 0){
                         if(newButton.absoluteVal)
-                            newButton.axisValue = Mathf.Abs(axisVal);
+                            newButton.axisValue.X = Mathf.Abs(axisVal);
                         else
-                            newButton.axisValue = axisVal;
+                            newButton.axisValue.X = axisVal;
                     }
                     else
-                        newButton.axisValue = 0;
+                        newButton.axisValue.X = 0;
                 }
                 else
-                    newButton.axisValue = axisVal;
+                    newButton.axisValue.X = axisVal;
             }
             else
             {
@@ -938,37 +938,37 @@ public class GamePadController
                 }
                 if (inputResult == 1)
                 {
-                    newButton.Pressed = true;
-                    newButton.Held = false;
-                    newButton.Released = false;
-                    newButton.Zero = false;
+                    newButton.inputState.Pressed = true;
+                    newButton.inputState.Held = false;
+                    newButton.inputState.Released = false;
+                    newButton.inputState.Zero = false;
                     //Debug.Log("Pressed B");
                     newButton.buttonState = LaunchGamePadControllerInspector.ButtonStates.Pressed;
                 }
                 else if (inputResult == 2)
                 {
-                    newButton.Pressed = false;
-                    newButton.Held = true;
-                    newButton.Released = false;
-                    newButton.Zero = false;
+                    newButton.inputState.Pressed = false;
+                    newButton.inputState.Held = true;
+                    newButton.inputState.Released = false;
+                    newButton.inputState.Zero = false;
                     //Debug.Log("Held B");
                     newButton.buttonState = LaunchGamePadControllerInspector.ButtonStates.Held;
                 }
                 else if (inputResult == 3)
                 {
-                    newButton.Pressed = false;
-                    newButton.Held = false;
-                    newButton.Released = true;
-                    newButton.Zero = false;
+                    newButton.inputState.Pressed = false;
+                    newButton.inputState.Held = false;
+                    newButton.inputState.Released = true;
+                    newButton.inputState.Zero = false;
                     //Debug.Log("Released B");
                     newButton.buttonState = LaunchGamePadControllerInspector.ButtonStates.Released;
                 }
                 else
                 {
-                    newButton.Pressed = false;
-                    newButton.Held = false;
-                    newButton.Released = false;
-                    newButton.Zero = true;
+                    newButton.inputState.Pressed = false;
+                    newButton.inputState.Held = false;
+                    newButton.inputState.Released = false;
+                    newButton.inputState.Zero = true;
                     newButton.buttonState = LaunchGamePadControllerInspector.ButtonStates.Zero;
                 }
             }
@@ -1120,7 +1120,7 @@ public class GamePadController
             public LaunchGamePadControllerInspector.typeInput inputType;
             public string inputName = "";
             public LaunchGamePadControllerInspector.axisDir inputDir;
-            public float axisValue = 0;
+            public Controller.StickStates axisValue;
             public bool showSlider = false;
 
             public bool inputSetup = false;
@@ -1128,8 +1128,9 @@ public class GamePadController
 
             public LaunchGamePadControllerInspector.ButtonStates buttonState;
 
-            public bool
-                Pressed, Released, Held, Zero;
+            public Controller.ButtonsStates inputState;
+            //public bool
+            //    Pressed, Released, Held, Zero;
 
         }
     }
