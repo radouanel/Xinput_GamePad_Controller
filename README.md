@@ -35,3 +35,21 @@ if(gamePad.A.Pressed)
 ```   
 that way this code will allow you to have both inputs (computer and gamepad) working at the same time or only one at a time (if the gamePad is not connected) with a single line of code.
 
+```
+//--> Additional Objectives
+//add dualstick for 2d games
+//add deadzone function
+//add more than 4 controllers to gamepadcontroller
+//change gamepad number classes to enum, ex : GamePad.One
+
+//-->Computer Inputs
+//First controllers values get copied in all other controllers (so as not to rewrite them)
+//allow change of key or button or axis at runtime (public class and variables plus custom functions)
+//Check if button is axis and transform axis values to button
+//make some deafult parameters (Ex : Right Stick is always axis, if button is axis, then only one direction)
+//Add other default Parameters (Ex : LeftStick X&Y already have Horizontal and Vertical written, etc...)
+//Add smart autocomplete
+//Use custom editor for "enable controller"
+//Use structs (same as GamePadController) for computer inputs
+//Save/Load preconfigured inputs in a file
+```
