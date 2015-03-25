@@ -1,25 +1,25 @@
 ﻿using UnityEngine;
+#if UNITY_EDITOR
 using UnityEditor;
+#endif
 using System.Collections;
 using XInputDotNetPure;
 using System.Reflection;
 
 /*--> Additional Objectives
+// Use the controller on a different thread if possible
 //add dualstick for 2d games
 //add deadzone function
-//add more than 4 controllers to gamepadcontroller
-//change gamepad number classes to enum, ex : GamePad.One
 
 
-//First controllers values get copied in all other controllers (so as not to rewrite them)
-//allow change of key or button or axis at runtime (public class and variables plus custom functions)
 //Check if button is axis and transform axis values to button
+//Use custom editor for "enable controller"
+//Save/Load preconfigured inputs in a file
+//allow change of key or button or axis at runtime (public class and variables plus custom functions)
+//First controllers values get copied in all other controllers (so as not to rewrite them)
 //make some deafult parameters (Ex : Right Stick is always axis, if button is axis, then only one direction)
 //Add other default Parameters (Ex : LeftStick X&Y already have Horizontal and Vertical written, etc...)
 //Add smart autocomplete
-//Use custom editor for "enable controller"
-//Use structs (same as GamePadController) for computer inputs
-//Save/Load preconfigured inputs in a file
 */
 
 [System.Serializable]
@@ -28,7 +28,9 @@ public class LaunchGamePadController : MonoBehaviour
     GamePadController gamePadController = new GamePadController();
     public bool DebugMode = true;
 
+#if UNITY_EDITOR
     public GamePadController.DebugGamePad DebugParameters;
+#endif
 
     private static float[] _vibrationTimers = new float[4];
     private bool[] _controllersConnected = new bool[4];
@@ -53,7 +55,10 @@ public class LaunchGamePadController : MonoBehaviour
 
     void Update()
     {
-        GamePadController.DebugMode = DebugMode;
+#if UNITY_EDITOR
+        GamePadController.DebugMode = DebugMode;        
+#endif
+
         gamePadController.Update();
 
         _vibrationTimers = GamePadController.VibrationTimers;
@@ -67,8 +72,11 @@ public class LaunchGamePadController : MonoBehaviour
                 GamePadController.VibrationTimers = _vibrationTimers;
             }
         }
+
+#if UNITY_EDITOR
         if (DebugMode)
-            DebugParameters.Update();        
+            DebugParameters.Update();  
+#endif
     }
 
     IEnumerator ResetTimer(int controllerId, float timer)
@@ -80,31 +88,12 @@ public class LaunchGamePadController : MonoBehaviour
 
 }
 
+#if UNITY_EDITOR
 [System.Serializable]
 [CanEditMultipleObjects]
 [CustomEditor(typeof(LaunchGamePadController))]
 public class LaunchGamePadControllerInspector : Editor
 {
-    [System.Serializable]
-    public enum typeInput
-    {
-        Axis,
-        Button,
-        Key
-    }
-    public enum axisDir
-    {
-        plus,
-        minus,
-        both
-    }
-    public enum ButtonStates
-    {
-        Released,
-        Pressed,
-        Held,
-        Zero
-    }
 
     [SerializeField]
     public GamePadController.ControllerComputerInputs[] controllers = new GamePadController.ControllerComputerInputs[4];
@@ -120,10 +109,12 @@ public class LaunchGamePadControllerInspector : Editor
         mainControllerScript = (LaunchGamePadController)target;
         for (int i = 0; i < controllers.Length; i++)
         {
-            controllers[i] = mainControllerScript.computerControllers[i];
+            controllers[i] = mainControllerScript.computerControllers[i];            
+#if UNITY_EDITOR
             controllers[i].targetInspector = this;
             mainControllerScript.computerControllers[i].targetInspector = this;
-                foldOutStates[i] = false;
+#endif
+            foldOutStates[i] = false;
         }
         guiCreated = true;
     }
@@ -197,9 +188,32 @@ public class LaunchGamePadControllerInspector : Editor
         }
     }
 }
+#endif
 
 public class GamePadController
 {
+
+    [System.Serializable]
+    public enum typeInput
+    {
+        Axis,
+        Button,
+        Key
+    }
+    public enum axisDir
+    {
+        plus,
+        minus,
+        both
+    }
+    public enum ButtonStates
+    {
+        Released,
+        Pressed,
+        Held,
+        Zero
+    }
+
     public static Controller GamePadOne;
     public static Controller GamePadTwo;
     public static Controller GamePadThree;
@@ -490,7 +504,7 @@ public class GamePadController
         if (ControllerConnected[controllerId])
         {
             if (computerInput.inputSetup && gamePadVal == 0)
-                return computerInput.axisValue.X;
+                return computerInput.axisValue;
             else
                 return gamePadVal;
         }
@@ -498,7 +512,7 @@ public class GamePadController
         {
             {
                 if (computerInput.inputSetup)
-                    return computerInput.axisValue.X;
+                    return computerInput.axisValue;
                 else
                     return 0f;
             }
@@ -518,14 +532,14 @@ public class GamePadController
                 gamePadButton = gamePadButton.ToLower();
 
             curGamePadButton = (Controller.ButtonsStates)GamePads[controllerId].GetType().GetField(gamePadButton).GetValue(GamePadController.GamePads[controllerId]);
-            curcomputerButton = (ControllerComputerInputs.ButtonInput) computerInputs[controllerId].GetType().GetField(computerButton).GetValue(GamePadController.computerInputs[controllerId]);
+            curcomputerButton = (ControllerComputerInputs.ButtonInput)computerInputs[controllerId].GetType().GetField(computerButton).GetValue(GamePadController.computerInputs[controllerId]);
 
             if (curcomputerButton.inputSetup)
             {
-                curGamePadButton.Held = SetAndCheckIfUnityButtonIsSetup(controllerId, curcomputerButton, curGamePadButton.Held, curcomputerButton.inputState.Held);
-                curGamePadButton.Pressed = SetAndCheckIfUnityButtonIsSetup(controllerId, curcomputerButton, curGamePadButton.Pressed, curcomputerButton.inputState.Pressed);
-                curGamePadButton.Released = SetAndCheckIfUnityButtonIsSetup(controllerId, curcomputerButton, curGamePadButton.Released, curcomputerButton.inputState.Released);
-                curGamePadButton.Zero = SetAndCheckIfUnityButtonIsSetup(controllerId, curcomputerButton, curGamePadButton.Zero, curcomputerButton.inputState.Zero);
+                curGamePadButton.Held = SetAndCheckIfUnityButtonIsSetup(controllerId, curcomputerButton, curGamePadButton.Held, curcomputerButton.Held);
+                curGamePadButton.Pressed = SetAndCheckIfUnityButtonIsSetup(controllerId, curcomputerButton, curGamePadButton.Pressed, curcomputerButton.Pressed);
+                curGamePadButton.Released = SetAndCheckIfUnityButtonIsSetup(controllerId, curcomputerButton, curGamePadButton.Released, curcomputerButton.Released);
+                curGamePadButton.Zero = SetAndCheckIfUnityButtonIsSetup(controllerId, curcomputerButton, curGamePadButton.Zero, curcomputerButton.Zero);
 
                 GamePads[controllerId].GetType().GetField(gamePadButton).SetValue(GamePads[controllerId], curGamePadButton);
             }
@@ -707,11 +721,14 @@ public class GamePadController
         #endregion
 
         public bool debugString = false;
+
+#if UNITY_EDITOR
         public LaunchGamePadControllerInspector targetInspector;
+#endif
 
         private string[] _computerClassButtons = new string[] { "ButtonA", "ButtonB", "ButtonX", "ButtonY", "ButtonUP", "ButtonDOWN", "ButtonLEFT", "ButtonRIGHT", "ButtonR3", "ButtonL3", "LeftButton", "RightButton", "start", "select" };
         private string[] _computerClassAxis = new string[] { "RightTrigger", "LeftTrigger", "RightStickX", "RightStickY", "LeftStickX", "LeftStickY" };
-        
+
         public ControllerComputerInputs(int _controllerId)
         {
             controllerId = _controllerId;
@@ -732,7 +749,7 @@ public class GamePadController
             {
                 ControllerComputerInputs.ButtonInput curcomputerButton = new ControllerComputerInputs.ButtonInput();
                 string computerButton = "";
-                if(i < _computerClassButtons.Length)
+                if (i < _computerClassButtons.Length)
                 {
                     computerButton = _computerClassButtons[i];
                 }
@@ -785,7 +802,7 @@ public class GamePadController
             //CreateInput(LeftStickX);
             //CreateInput(LeftStickY);
             #endregion
-            EditorGUILayout.Space();
+            //EditorGUILayout.Space();
             GUILayout.EndVertical();
         }
 
@@ -824,11 +841,12 @@ public class GamePadController
 
         public void CreateInput(ButtonInput newButton)
         {
+#if UNITY_EDITOR
             GUILayout.BeginHorizontal();
 
             //GUILayout.Label(newButton.buttonName, GUILayout.MaxWidth(80));
             EditorGUILayout.LabelField(newButton.buttonName, GUILayout.MaxWidth(80));
-            newButton.inputType = (LaunchGamePadControllerInspector.typeInput)EditorGUILayout.EnumPopup(newButton.inputType, GUILayout.MaxWidth(60));
+            newButton.inputType = (typeInput)EditorGUILayout.EnumPopup(newButton.inputType, GUILayout.MaxWidth(60));
             GUIStyle textFieldSetup = new GUIStyle(GUI.skin.textField);
             GUIStyle buttonSetup = new GUIStyle(GUI.skin.button);
             if (newButton.inputSetup && newButton.inputName != "")
@@ -842,12 +860,12 @@ public class GamePadController
                 textFieldSetup.focused.textColor = Color.red;
             }
             newButton.inputName = EditorGUILayout.TextField(newButton.inputName, textFieldSetup);
-            if (newButton.inputType == LaunchGamePadControllerInspector.typeInput.Axis)
+            if (newButton.inputType == typeInput.Axis)
             {
-                newButton.inputDir = (LaunchGamePadControllerInspector.axisDir)EditorGUILayout.EnumPopup(newButton.inputDir, GUILayout.MaxWidth(50));
-                if (newButton.inputDir == LaunchGamePadControllerInspector.axisDir.minus || newButton.inputDir == LaunchGamePadControllerInspector.axisDir.plus)
+                newButton.inputDir = (axisDir)EditorGUILayout.EnumPopup(newButton.inputDir, GUILayout.MaxWidth(50));
+                if (newButton.inputDir == axisDir.minus || newButton.inputDir == axisDir.plus)
                 {
-                    if (newButton.inputDir == LaunchGamePadControllerInspector.axisDir.minus)
+                    if (newButton.inputDir == axisDir.minus)
                     {
                         if (newButton.absoluteVal)
                         {
@@ -884,96 +902,101 @@ public class GamePadController
                         }
                         GUILayout.EndHorizontal();
                         GUILayout.BeginVertical();
-                        newButton.axisValue.X = EditorGUILayout.Slider(newButton.axisValue.X, -1, 1);
-                        ProgressBar(Mathf.Abs(newButton.axisValue.X), "Axis");
+                        newButton.axisValue = EditorGUILayout.Slider(newButton.axisValue, -1, 1);
+                        ProgressBar(Mathf.Abs(newButton.axisValue), "Axis");
                         GUILayout.EndVertical();
                         GUILayout.BeginVertical();
                     }
                 }
-                EditorGUILayout.FloatField(newButton.axisValue.X);
+                EditorGUILayout.FloatField(newButton.axisValue);
             }
             else
             {
-                newButton.buttonState = (LaunchGamePadControllerInspector.ButtonStates)EditorGUILayout.EnumPopup(newButton.buttonState, GUILayout.MaxWidth(90));
+                newButton.buttonState = (ButtonStates)EditorGUILayout.EnumPopup(newButton.buttonState, GUILayout.MaxWidth(90));
             }
             GUILayout.EndHorizontal();
+#endif
         }
 
         public void UpdateInput(ButtonInput newButton)
         {
-            if (newButton.inputType == LaunchGamePadControllerInspector.typeInput.Axis)
+            if (newButton.inputType == typeInput.Axis)
             {
                 float axisVal = UpdateUnityAxis(newButton.inputName, newButton);
-                if (newButton.inputDir == LaunchGamePadControllerInspector.axisDir.plus)
+                if (newButton.inputDir == axisDir.plus)
                 {
                     if (axisVal >= 0)
-                        newButton.axisValue.X = axisVal;
+                        newButton.axisValue = axisVal;
                     else
-                        newButton.axisValue.X = 0;
+                        newButton.axisValue = 0;
                 }
-                else if (newButton.inputDir == LaunchGamePadControllerInspector.axisDir.minus)
+                else if (newButton.inputDir == axisDir.minus)
                 {
-                    if (axisVal <= 0){
-                        if(newButton.absoluteVal)
-                            newButton.axisValue.X = Mathf.Abs(axisVal);
+                    if (axisVal <= 0)
+                    {
+                        if (newButton.absoluteVal)
+                            newButton.axisValue = Mathf.Abs(axisVal);
                         else
-                            newButton.axisValue.X = axisVal;
+                            newButton.axisValue = axisVal;
                     }
                     else
-                        newButton.axisValue.X = 0;
+                        newButton.axisValue = 0;
                 }
                 else
-                    newButton.axisValue.X = axisVal;
+                    newButton.axisValue = axisVal;
             }
             else
             {
                 int inputResult = 0;
-                if (newButton.inputType == LaunchGamePadControllerInspector.typeInput.Button)
+                if (newButton.inputType == typeInput.Button)
                 {
                     inputResult = UpdateUnityButtons(newButton.inputName, newButton);
                 }
-                if (newButton.inputType == LaunchGamePadControllerInspector.typeInput.Key)
+                if (newButton.inputType == typeInput.Key)
                 {
                     inputResult = UpdateUnityKeys(newButton.inputName, newButton);
                 }
                 if (inputResult == 1)
                 {
-                    newButton.inputState.Pressed = true;
-                    newButton.inputState.Held = false;
-                    newButton.inputState.Released = false;
-                    newButton.inputState.Zero = false;
+                    newButton.Pressed = true;
+                    newButton.Held = false;
+                    newButton.Released = false;
+                    newButton.Zero = false;
                     //Debug.Log("Pressed B");
-                    newButton.buttonState = LaunchGamePadControllerInspector.ButtonStates.Pressed;
+                    newButton.buttonState = ButtonStates.Pressed;
                 }
                 else if (inputResult == 2)
                 {
-                    newButton.inputState.Pressed = false;
-                    newButton.inputState.Held = true;
-                    newButton.inputState.Released = false;
-                    newButton.inputState.Zero = false;
+                    newButton.Pressed = false;
+                    newButton.Held = true;
+                    newButton.Released = false;
+                    newButton.Zero = false;
                     //Debug.Log("Held B");
-                    newButton.buttonState = LaunchGamePadControllerInspector.ButtonStates.Held;
+                    newButton.buttonState = ButtonStates.Held;
                 }
                 else if (inputResult == 3)
                 {
-                    newButton.inputState.Pressed = false;
-                    newButton.inputState.Held = false;
-                    newButton.inputState.Released = true;
-                    newButton.inputState.Zero = false;
+                    newButton.Pressed = false;
+                    newButton.Held = false;
+                    newButton.Released = true;
+                    newButton.Zero = false;
                     //Debug.Log("Released B");
-                    newButton.buttonState = LaunchGamePadControllerInspector.ButtonStates.Released;
+                    newButton.buttonState = ButtonStates.Released;
                 }
                 else
                 {
-                    newButton.inputState.Pressed = false;
-                    newButton.inputState.Held = false;
-                    newButton.inputState.Released = false;
-                    newButton.inputState.Zero = true;
-                    newButton.buttonState = LaunchGamePadControllerInspector.ButtonStates.Zero;
+                    newButton.Pressed = false;
+                    newButton.Held = false;
+                    newButton.Released = false;
+                    newButton.Zero = true;
+                    newButton.buttonState = ButtonStates.Zero;
                 }
             }
+
+#if UNITY_EDITOR
             if (targetInspector)
                 targetInspector.Repaint();
+#endif
         }
 
         #region Update Unity Inputs
@@ -1101,15 +1124,18 @@ public class GamePadController
         {
             // Get a rect for the progress bar using the same margins as a textfield:
             Rect rect = GUILayoutUtility.GetRect(18, 18, "TextField");
+
+#if UNITY_EDITOR
             EditorGUI.ProgressBar(rect, value, label);
             EditorGUILayout.Space();
+#endif
         }
 
         [System.Serializable]
         public class ButtonInput
         {
 
-            public ButtonInput(string instanceName = "Button", LaunchGamePadControllerInspector.typeInput buttonType = LaunchGamePadControllerInspector.typeInput.Button, string nameInput = "")
+            public ButtonInput(string instanceName = "Button", typeInput buttonType = typeInput.Button, string nameInput = "")
             {
                 buttonName = instanceName;
                 inputType = buttonType;
@@ -1117,24 +1143,25 @@ public class GamePadController
             }
 
             public string buttonName = "test";
-            public LaunchGamePadControllerInspector.typeInput inputType;
+            public typeInput inputType;
             public string inputName = "";
-            public LaunchGamePadControllerInspector.axisDir inputDir;
-            public Controller.StickStates axisValue;
+            public axisDir inputDir;
+            public float axisValue = 0;
             public bool showSlider = false;
 
             public bool inputSetup = false;
             public bool absoluteVal = true;
 
-            public LaunchGamePadControllerInspector.ButtonStates buttonState;
+            public ButtonStates buttonState;
 
-            public Controller.ButtonsStates inputState;
-            //public bool
-            //    Pressed, Released, Held, Zero;
+            public bool
+                Pressed, Released, Held, Zero;
 
         }
     }
 
+
+#if UNITY_EDITOR
     [System.Serializable]
     public class DebugGamePad
     {
@@ -1241,8 +1268,11 @@ public class GamePadController
             }
         }
     }
+#endif
 }
 
+
+#if UNITY_EDITOR
 public class ReadOnlyAttribute : PropertyAttribute
 {
 }
@@ -1264,7 +1294,7 @@ public class ReadOnlyDrawer : PropertyDrawer
         GUI.enabled = true;
     }
 }
-
+#endif
 
 /* Originale options :
 Triggers = GamePadStateArray.Triggers.Left, GamePadStateArray.Triggers.Right
