@@ -43,6 +43,7 @@ that way this code will allow you to have both inputs (computer and gamepad) wor
 //change gamepad number classes to enum, ex : GamePad.One
 
 //-->Computer Inputs
+//check all existing unity assets (case insensitive serach), auto-correct axis if incorrect case
 //First controllers values get copied in all other controllers (so as not to rewrite them)
 //allow change of key or button or axis at runtime (public class and variables plus custom functions)
 //Check if button is axis and transform axis values to button
